@@ -1,0 +1,2085 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CMH Transport — Dashboard (Single File)</title>
+  <style>
+    :root{
+      --bg:#f6f8fc;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e6ebf2;
+      --primary:#2f60f6;
+      --primary-2:#1f4ae0;
+      --good:#16a34a;
+      --bad:#dc2626;
+      --warn:#f59e0b;
+
+      --sidebar:#0b1220;
+      --sidebar-2:#0f1a2e;
+      --sidebarText:#cbd5e1;
+      --sidebarText2:#94a3b8;
+
+      --shadow: 0 10px 30px rgba(2,6,23,.06);
+      --radius: 14px;
+      --radius2: 18px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit;text-decoration:none}
+    .app{
+      display:grid;
+      grid-template-columns: 260px 1fr;
+      min-height:100vh;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      background:linear-gradient(180deg,var(--sidebar), #081022);
+      color:var(--sidebarText);
+      padding:18px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      border-right:1px solid rgba(255,255,255,.06);
+    }
+    .brand{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 10px;
+      border-radius:12px;
+      background:rgba(255,255,255,.04);
+    }
+    .truck{
+      width:34px;height:34px;border-radius:10px;
+      display:grid;place-items:center;
+      background:rgba(47,96,246,.18);
+      border:1px solid rgba(47,96,246,.35);
+    }
+    .brand h1{
+      margin:0;font-size:16px;letter-spacing:.2px;
+    }
+    .nav{
+      display:flex;flex-direction:column;gap:6px;
+      padding:8px 4px;
+    }
+    .nav a{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      color:var(--sidebarText);
+      cursor:pointer;
+      user-select:none;
+    }
+    .nav a:hover{background:rgba(255,255,255,.06)}
+    .nav a.active{
+      background:rgba(47,96,246,.16);
+      border:1px solid rgba(47,96,246,.25);
+    }
+    .nav .ico{
+      width:18px;height:18px;opacity:.95;
+      display:inline-block;
+    }
+    .sidebar .spacer{flex:1}
+    .user{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 10px;border-radius:12px;
+      background:rgba(255,255,255,.04);
+    }
+    .avatar{
+      width:36px;height:36px;border-radius:999px;
+      display:grid;place-items:center;
+      background:rgba(47,96,246,.18);
+      color:#dbeafe;font-weight:700;
+    }
+    .user .meta{line-height:1.2}
+    .user .meta .name{font-weight:700;font-size:13px}
+    .user .meta .role{font-size:12px;color:var(--sidebarText2)}
+
+    /* Main */
+    .main{
+      display:flex;flex-direction:column;
+      min-width:0;
+    }
+    .topbar{
+      position:sticky;top:0;z-index:20;
+      background:rgba(246,248,252,.85);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 18px;
+      gap:12px;
+    }
+    .crumb{
+      display:flex;align-items:center;gap:10px;
+      min-width:180px;
+      font-weight:700;
+    }
+    .controls{
+      display:flex;align-items:center;gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      box-shadow: 0 2px 10px rgba(2,6,23,.03);
+      font-size:13px;
+    }
+    .pill .dot{
+      width:9px;height:9px;border-radius:999px;background:var(--good);
+    }
+    .iconbtn{
+      width:40px;height:40px;border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff;
+      display:grid;place-items:center;
+      cursor:pointer;
+    }
+    .iconbtn:hover{border-color:#cbd5e1}
+    .content{
+      padding:18px;
+      max-width:1180px;
+      width:100%;
+      margin:0 auto;
+    }
+
+    /* Page header */
+    .page-header{
+      display:flex;align-items:flex-start;justify-content:space-between;
+      gap:12px;
+      margin:10px 2px 16px;
+    }
+    .page-title h2{margin:0;font-size:34px;letter-spacing:-.4px}
+    .page-title p{margin:6px 0 0;color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:700;
+      font-size:13px;
+      cursor:pointer;
+      display:inline-flex;align-items:center;gap:10px;
+    }
+    .btn:hover{border-color:#cbd5e1}
+    .btn.primary{
+      background:var(--primary);
+      border-color:transparent;
+      color:#fff;
+    }
+    .btn.primary:hover{background:var(--primary-2)}
+    .btn.danger{
+      background:#fee2e2;border-color:#fecaca;color:#991b1b;
+    }
+    .btn.ghost{
+      background:transparent;
+    }
+
+    /* Cards & grid */
+    .grid{
+      display:grid;
+      gap:14px;
+    }
+    .grid.cols-4{grid-template-columns: repeat(4, minmax(0, 1fr));}
+    .grid.cols-3{grid-template-columns: repeat(3, minmax(0, 1fr));}
+    .grid.cols-2{grid-template-columns: repeat(2, minmax(0, 1fr));}
+    @media (max-width: 1050px){
+      .grid.cols-4{grid-template-columns: repeat(2, minmax(0, 1fr));}
+    }
+    @media (max-width: 700px){
+      .app{grid-template-columns: 1fr;}
+      .sidebar{position:sticky;top:0;z-index:50}
+      .grid.cols-4,.grid.cols-3,.grid.cols-2{grid-template-columns: 1fr;}
+      .crumb{display:none}
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius2);
+      box-shadow:var(--shadow);
+    }
+    .card .card-head{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;
+      gap:10px;
+    }
+    .card .card-head h3{
+      margin:0;font-size:14px;
+    }
+    .card .card-head p{
+      margin:0;color:var(--muted);font-size:12px;
+    }
+    .card .card-body{padding:14px 16px;}
+    .kpi{
+      padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    }
+    .kpi .label{color:var(--muted);font-size:12px}
+    .kpi .value{font-size:30px;font-weight:900;letter-spacing:-.5px;margin-top:6px}
+    .kpi .hint{color:var(--muted);font-size:12px;margin-top:6px}
+    .kpi .badge-ico{
+      width:36px;height:36px;border-radius:14px;
+      display:grid;place-items:center;
+      background:rgba(47,96,246,.12);
+      border:1px solid rgba(47,96,246,.22);
+    }
+
+    /* Stepper */
+    .stepper{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap:10px;
+      padding:14px 16px;
+    }
+    .step{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      background:#fff;
+      display:flex;align-items:center;gap:10px;
+      min-width:0;
+    }
+    .step .ring{
+      width:22px;height:22px;border-radius:999px;
+      border:2px solid #cbd5e1;
+      display:grid;place-items:center;
+      color:#fff;font-weight:900;font-size:12px;
+      flex:0 0 auto;
+    }
+    .step.done .ring{border-color:rgba(22,163,74,.25);background:var(--good)}
+    .step.active .ring{border-color:rgba(47,96,246,.3);background:var(--primary)}
+    .step .t{min-width:0}
+    .step .t b{display:block;font-size:13px}
+    .step .t span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    @media (max-width: 900px){
+      .stepper{grid-template-columns:1fr; }
+    }
+
+    /* Tables */
+    .table-wrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}
+    table{width:100%;border-collapse:separate;border-spacing:0;min-width:820px;background:#fff}
+    th,td{padding:12px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
+    th{position:sticky;top:0;background:#fbfcff;color:#334155;text-align:left;font-weight:800}
+    tr:hover td{background:#fbfdff}
+    .muted{color:var(--muted)}
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;
+      font-size:12px;font-weight:900;
+      border:1px solid var(--line);
+      background:#fff;
+    }
+    .badge.good{background:#dcfce7;border-color:#bbf7d0;color:#166534}
+    .badge.bad{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+    .badge.warn{background:#fef3c7;border-color:#fde68a;color:#92400e}
+    .row-actions{display:flex;gap:8px}
+    .mini{
+      padding:7px 10px;border-radius:10px;
+      border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:800;font-size:12px
+    }
+    .mini:hover{border-color:#cbd5e1}
+    .mini.danger{background:#fff1f2;border-color:#fecdd3;color:#9f1239}
+
+    /* Inputs */
+    .field{
+      display:flex;flex-direction:column;gap:6px;margin-bottom:12px;
+    }
+    label{font-size:12px;color:#475569;font-weight:800}
+    input,select,textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      outline:none;
+      background:#fff;
+    }
+    input:focus,select:focus,textarea:focus{border-color:#c7d2fe;box-shadow: 0 0 0 4px rgba(47,96,246,.10)}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 800px){ .row{grid-template-columns:1fr} }
+
+    /* Dropzone */
+    .dropzone{
+      border:2px dashed #d8e0ef;
+      border-radius:18px;
+      padding:26px;
+      background:#fbfcff;
+      display:grid;place-items:center;
+      gap:10px;
+      text-align:center;
+    }
+    .dropzone.drag{border-color:#93c5fd;background:#eff6ff}
+    .dropzone .big{font-weight:900;font-size:16px}
+    .dropzone .small{color:var(--muted);font-size:13px}
+    .dropzone .filebtn{
+      margin-top:6px;
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:10px 14px;border-radius:12px;
+      background:var(--primary);color:#fff;font-weight:900;border:none;cursor:pointer;
+    }
+    .dropzone .filebtn:hover{background:var(--primary-2)}
+
+    /* Empty state */
+    .empty{
+      border:2px dashed #dbe3f2;
+      background:#fbfcff;
+      border-radius:18px;
+      padding:46px 18px;
+      display:grid;place-items:center;
+      gap:12px;
+      text-align:center;
+    }
+    .empty .emoji{font-size:34px}
+    .empty b{font-size:16px}
+    .empty p{margin:0;color:var(--muted)}
+
+    /* Toast */
+    .toast{
+      position:fixed;right:18px;bottom:18px;z-index:80;
+      background:#0b1220;color:#e2e8f0;
+      padding:12px 14px;border-radius:14px;
+      box-shadow: 0 18px 60px rgba(2,6,23,.35);
+      display:none;
+      max-width:360px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .toast.show{display:block}
+    .toast b{display:block;margin-bottom:4px}
+    .toast small{color:#94a3b8}
+
+    /* Modal */
+    .modal{
+      position:fixed;inset:0;
+      background:rgba(2,6,23,.45);
+      display:none;place-items:center;
+      padding:18px;
+      z-index:90;
+    }
+    .modal.show{display:grid}
+    .modal .box{
+      width:min(640px, 100%);
+      background:#fff;border-radius:18px;
+      border:1px solid var(--line);
+      box-shadow: 0 20px 80px rgba(2,6,23,.25);
+      overflow:hidden;
+    }
+    .modal .box .head{
+      padding:14px 16px;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+    }
+    .modal .box .head b{font-size:14px}
+    .modal .box .body{padding:14px 16px}
+    .closex{
+      width:36px;height:36px;border-radius:12px;border:1px solid var(--line);
+      background:#fff;cursor:pointer;
+    }
+
+    /* Small utilities */
+    .split{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hint{color:var(--muted);font-size:12px;margin-top:6px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
+    .small{font-size:12px;color:var(--muted)}
+    .preview{
+      background:#fbfcff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 12px;
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+
+    /* Page visibility */
+    section.page{display:none}
+    section.page.active{display:block}
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="truck" aria-hidden="true">
+        <!-- simple truck icon -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M3 7h11v10H3V7Z" stroke="#93c5fd" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M14 10h4l3 3v4h-7v-7Z" stroke="#93c5fd" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M7 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" fill="#93c5fd"/>
+          <path d="M17 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" fill="#93c5fd"/>
+        </svg>
+      </div>
+      <div>
+        <h1>CMH Transport</h1>
+        <div class="small">Admin Dashboard</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <a data-page="overview" class="active"><span class="ico">▦</span> Overview</a>
+      <a data-page="import"><span class="ico">⇪</span> Import</a>
+      <a data-page="pickups"><span class="ico">◎</span> Pickups</a>
+      <a data-page="group-settings"><span class="ico">⚙</span> Group Settings</a>
+      <a data-page="groups"><span class="ico">👥</span> Groups</a>
+      <a data-page="routes"><span class="ico">⤳</span> Routes</a>
+      <a data-page="telegram"><span class="ico">✈</span> Telegram</a>
+      <a data-page="logs"><span class="ico">≣</span> Logs</a>
+      <a data-page="settings"><span class="ico">🔒</span> Settings</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="user">
+      <div class="avatar">JS</div>
+      <div class="meta">
+        <div class="name" id="userName">John Smith</div>
+        <div class="role">Admin</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="crumb" id="crumb">Dashboard</div>
+
+        <div class="controls">
+          <div class="pill">
+            <span class="muted">Date</span>
+            <input id="dateInput" type="date" style="border:none; padding:0; width:auto; font-weight:800" />
+          </div>
+
+          <div class="pill">
+            <span class="muted">Shift</span>
+            <select id="shiftSelect" style="border:none; padding:0; width:auto; font-weight:800">
+              <option value="A">Shift A (09:00 - 17:00)</option>
+              <option value="B">Shift B (11:00 - 19:00)</option>
+              <option value="C">Shift C (16:00 - 00:00)</option>
+            </select>
+          </div>
+
+          <div class="pill">
+            <span class="dot"></span>
+            <span id="tzLabel">Africa/Casablanca</span>
+          </div>
+        </div>
+
+        <div class="right">
+          <button class="iconbtn" id="bellBtn" title="Notifications">
+            🔔
+          </button>
+          <button class="btn" id="resetAllBtn" title="Clear all local data">
+            ♻ Reset Demo Data
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section class="page active" id="page-overview">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Overview</h2>
+            <p>Real-time progress of the optimization engine.</p>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="runPipelineBtn">▶ Run Full Pipeline</button>
+          </div>
+        </div>
+
+        <div class="grid cols-4" id="kpiGrid"></div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="card-head">
+            <div>
+              <h3>Pipeline Status</h3>
+              <p>Import → Pickups → Groups → Routes → Notify</p>
+            </div>
+          </div>
+          <div class="stepper" id="pipelineStepper"></div>
+        </div>
+
+        <div class="grid cols-2" style="margin-top:14px;">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Recent Activity</h3>
+                <p>Last system operations</p>
+              </div>
+              <button class="btn ghost" id="clearLogsBtn">Clear</button>
+            </div>
+            <div class="card-body" id="recentActivity"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Quick Actions</h3>
+                <p>Common admin shortcuts</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display:grid; gap:10px;">
+                <button class="btn" data-jump="pickups">👤 Manage Users (Pickups)</button>
+                <button class="btn" data-jump="group-settings">📍 Update Zones (Settings)</button>
+                <button class="btn" data-jump="import">✅ Verify Shifts (Import)</button>
+              </div>
+              <div class="hint">These buttons just navigate inside the demo.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- IMPORT -->
+      <section class="page" id="page-import">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Import Shifts</h2>
+            <p>Upload CSV export to sync today's pickups.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="downloadSampleBtn">⬇ Download sample CSV</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="dropzone" id="dropzone">
+              <div style="font-size:34px;">📄</div>
+              <div class="big">Drop your CSV file here</div>
+              <div class="small">Or click to browse (portal_shift.csv)</div>
+              <button class="filebtn" id="selectFileBtn">Select File</button>
+              <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none;">
+            </div>
+
+            <div style="margin-top:14px;" class="small">
+              <b>Expected headers (flexible):</b>
+              <span class="mono">User, pickup, Date, start_at, end_at, id_telegram, Zone</span>
+              <div class="hint">You can paste any CSV; we try to map headers smartly.</div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="card" style="box-shadow:none;">
+                <div class="card-head">
+                  <div>
+                    <h3>Import Report</h3>
+                    <p>Validation and generated rows</p>
+                  </div>
+                </div>
+                <div class="card-body" id="importReport">
+                  <div class="muted">No file imported yet.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- PICKUPS -->
+      <section class="page" id="page-pickups">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Pickups</h2>
+            <p>Manage pickup locations and geocoding status.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="geocodeAllBtn">📍 Geocode All</button>
+            <button class="btn primary" id="addPickupBtn">＋ Add Pickup</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Pickup List (<span id="pickupCount">0</span>)</h3>
+              <p>Search and manage records</p>
+            </div>
+            <div style="min-width:260px;">
+              <input id="pickupSearch" placeholder="Search users or zones..." />
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Name</th>
+                  <th>Zone</th>
+                  <th>Address</th>
+                  <th>Coordinates</th>
+                  <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="pickupTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GROUP SETTINGS -->
+      <section class="page" id="page-group-settings">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Grouping Parameters</h2>
+            <p>Configure constraints for the auto-grouping algorithm.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="resetGroupSettingsBtn">↺ Reset</button>
+            <button class="btn primary" id="saveGroupSettingsBtn">💾 Save Configuration</button>
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Constraints</h3>
+                <p>Hard limits for route generation</p>
+              </div>
+            </div>
+            <div class="card-body" id="constraintsBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Fleet & Timing</h3>
+                <p>Vehicle availability and shift buffers</p>
+              </div>
+            </div>
+            <div class="card-body" id="fleetBox"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GROUPS -->
+      <section class="page" id="page-groups">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Groups</h2>
+            <p>Generated transport groups based on constraints.</p>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="regenerateGroupsBtn">Regenerate Groups</button>
+          </div>
+        </div>
+
+        <div id="groupsArea"></div>
+      </section>
+
+      <!-- ROUTES -->
+      <section class="page" id="page-routes">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Route Optimization</h2>
+            <p>Manage final driver assignments and routing.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="reOptimizeBtn">⟲ Re-Optimize</button>
+            <button class="btn primary" id="exportPdfBtn">⬇ Export All PDFs</button>
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Generated Routes (<span id="routeCount">0</span>)</h3>
+                <p>Routes derived from groups</p>
+              </div>
+            </div>
+            <div class="card-body" id="routesList"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Interactive Map Preview</h3>
+                <p>Select a route to visualize stops and path (demo)</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="empty" style="padding:34px 18px;">
+                <div class="emoji">🗺️</div>
+                <b id="mapTitle">Select a route</b>
+                <p id="mapSubtitle">Map integration requires API key (demo placeholder).</p>
+              </div>
+              <div class="hint">In this single-file demo, we show route stops as a list (no real map).</div>
+              <div id="mapStops" style="margin-top:12px;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TELEGRAM -->
+      <section class="page" id="page-telegram">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Telegram Notifications</h2>
+            <p>Notify passengers about their shift details.</p>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="sendBroadcastBtn">✈ Send Broadcast</button>
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Message Template</h3>
+                <p>Variables: <span class="mono">{{name}}</span>, <span class="mono">{{time}}</span>, <span class="mono">{{driver}}</span>, <span class="mono">{{link}}</span></p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="field">
+                <label>Template</label>
+                <textarea id="telegramTemplate"></textarea>
+              </div>
+              <div class="field">
+                <label>Preview</label>
+                <div class="preview" id="telegramPreview"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Delivery Stats</h3>
+                <p>Today's delivery performance (demo)</p>
+              </div>
+            </div>
+            <div class="card-body" id="deliveryStats"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="card-head">
+            <div>
+              <h3>Recipient Queue</h3>
+              <p>Generated from pickups (id_telegram)</p>
+            </div>
+            <button class="btn" id="refreshRecipientsBtn">↻ Refresh</button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Telegram ID</th>
+                  <th>Group</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+                </thead>
+                <tbody id="recipientTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOGS -->
+      <section class="page" id="page-logs">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>System Logs</h2>
+            <p>Audit trail of all pipeline operations.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="addFakeLogBtn">＋ Add Log</button>
+            <button class="btn danger" id="clearAllLogsBtn">🗑 Clear Logs</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Log Entries</h3>
+              <p>Timestamp • Level • Step • Message</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table style="min-width:720px">
+                <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Level</th>
+                  <th>Step</th>
+                  <th>Message</th>
+                </tr>
+                </thead>
+                <tbody id="logsTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>System Settings</h2>
+            <p>Manage API keys and external integrations.</p>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="saveSettingsBtn">💾 Save Settings</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Google Sheets Integration</h3>
+              <p>Connect to portal_shift and traject_exact sheets.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="field">
+                <label>Portal Shift Sheet ID</label>
+                <input id="portalSheetId" type="password" placeholder="••••••••••••••••" />
+              </div>
+              <div class="field">
+                <label>Traject Exact Sheet ID</label>
+                <input id="trajSheetId" type="password" placeholder="••••••••••••••••" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Telegram Bot</h3>
+              <p>Configuration for the notification bot.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="field">
+              <label>Bot Token</label>
+              <input id="telegramToken" type="password" placeholder="••••••••••••••••" />
+            </div>
+          </div>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Maps API</h3>
+              <p>Google Maps / Mapbox configuration for geocoding.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="field">
+              <label>API Key</label>
+              <input id="mapsKey" type="password" placeholder="••••••••••••••••" />
+            </div>
+            <div class="hint">In this demo we use “mock geocoding”. Real maps need a backend.</div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: Add/Edit Pickup -->
+<div class="modal" id="pickupModal">
+  <div class="box">
+    <div class="head">
+      <b id="pickupModalTitle">Add Pickup</b>
+      <button class="closex" id="pickupModalClose">✕</button>
+    </div>
+    <div class="body">
+      <div class="row">
+        <div class="field">
+          <label>User Name</label>
+          <input id="m_name" placeholder="Ahmed..." />
+        </div>
+        <div class="field">
+          <label>Zone</label>
+          <input id="m_zone" placeholder="Gzenaya / Branes..." />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Address (Pickup)</label>
+        <input id="m_address" placeholder="route rabat rond point..." />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Telegram ID (optional)</label>
+          <input id="m_telegram" placeholder="123456789" />
+        </div>
+        <div class="field">
+          <label>Coordinates (lat,lng) optional</label>
+          <input id="m_coords" placeholder="33.58,-7.60" />
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="small">Tip: coordinates empty → will be “NOT_GEOCODED”.</div>
+        <div class="right">
+          <button class="btn" id="pickupModalCancel">Cancel</button>
+          <button class="btn primary" id="pickupModalSave">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <b id="toastTitle">Done</b>
+  <small id="toastMsg">Action completed</small>
+</div>
+
+<script>
+/**
+ * CMH Transport — Single File Demo
+ * - Stores data in localStorage
+ * - Simulates pipeline: import -> pickups -> groups -> routes -> notify
+ */
+
+const LS_KEY = "cmh_transport_singlefile_v1";
+
+const DEFAULT_STATE = () => ({
+  ui: {
+    page: "overview",
+    date: new Date().toISOString().slice(0,10),
+    shift: "A",
+    timezone: "Africa/Casablanca",
+  },
+  settings: {
+    portalSheetId: "",
+    trajSheetId: "",
+    telegramToken: "",
+    mapsKey: "",
+  },
+  groupSettings: {
+    maxRadiusKm: 5,
+    maxRiders: 4,
+    maxRouteDurationMin: 60,
+    bufferBeforeShiftMin: 45,
+    totalVehicles: 10,
+    depotLat: 33.5898,
+    depotLng: -7.6038,
+  },
+  pickups: [
+    // demo seed
+    { id: uid(), status:"NOT_GEOCODED", name:"Ahmed LAMDAGHRI", zone:"Gzenaya", address:"gzenaya route al manzil à coté pharmacie 12 Mars", coords:null, telegramId:"" },
+    { id: uid(), status:"NOT_GEOCODED", name:"Saadia IBOURKI", zone:"Mghougha", address:"so9 bara el khassa bmce", coords:null, telegramId:"" },
+    { id: uid(), status:"NOT_GEOCODED", name:"Khalid AQAJJIA", zone:"Nour", address:"rond point nour résidence nour", coords:null, telegramId:"" },
+  ],
+  groups: [],
+  routes: [],
+  telegram: {
+    template:
+`Hello {{name}}!
+Your pickup for tomorrow is at {{time}}.
+Driver: {{driver}}.
+{{link}}`,
+    sends: [] // {pickupId, status}
+  },
+  logs: [
+    logObj("SUCCESS","System","Initialized demo dashboard."),
+  ],
+});
+
+let state = loadState();
+
+/* ---------- Helpers ---------- */
+function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
+function nowStamp(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  return `${d.toLocaleString("en-US",{month:"short"})} ${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function logObj(level, step, message){
+  return { id: uid(), ts: nowStamp(), level, step, message };
+}
+function addLog(level, step, message){
+  state.logs.unshift(logObj(level, step, message));
+  saveState();
+  renderAll();
+}
+function toast(title, msg){
+  const t = document.getElementById("toast");
+  document.getElementById("toastTitle").textContent = title;
+  document.getElementById("toastMsg").textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2400);
+}
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function loadState(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(!raw) return DEFAULT_STATE();
+  try{
+    const s = JSON.parse(raw);
+    return Object.assign(DEFAULT_STATE(), s);
+  }catch(e){
+    return DEFAULT_STATE();
+  }
+}
+function gotoPage(page){
+  state.ui.page = page;
+  saveState();
+  renderNav();
+  renderPages();
+  renderCrumb();
+}
+function setDate(v){
+  state.ui.date = v;
+  saveState();
+  renderAll();
+}
+function setShift(v){
+  state.ui.shift = v;
+  saveState();
+  renderAll();
+}
+function prettyCoords(c){
+  if(!c) return "—";
+  return `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}`;
+}
+
+/* ---------- Rendering ---------- */
+function renderNav(){
+  document.querySelectorAll("#nav a").forEach(a=>{
+    a.classList.toggle("active", a.dataset.page === state.ui.page);
+  });
+}
+function renderPages(){
+  document.querySelectorAll("section.page").forEach(sec=>sec.classList.remove("active"));
+  const sec = document.getElementById(`page-${state.ui.page}`);
+  if(sec) sec.classList.add("active");
+}
+function renderCrumb(){
+  const names = {
+    "overview":"Dashboard",
+    "import":"Dashboard / Import",
+    "pickups":"Dashboard / Pickups",
+    "group-settings":"Dashboard / Group Settings",
+    "groups":"Dashboard / Groups",
+    "routes":"Dashboard / Routes",
+    "telegram":"Dashboard / Telegram",
+    "logs":"Dashboard / Logs",
+    "settings":"Dashboard / Settings",
+  };
+  document.getElementById("crumb").textContent = names[state.ui.page] || "Dashboard";
+}
+
+function renderKpis(){
+  const totalPickups = state.pickups.length;
+  const activeGroups = state.groups.length;
+  const usersTransported = state.telegram.sends.filter(s=>s.status==="SUCCESS").length;
+  const missingIds = state.pickups.filter(p=>!p.telegramId).length;
+
+  const kpis = [
+    { title:"Total Pickups", value: totalPickups, hint:"Updated just now", ico:"📍" },
+    { title:"Active Groups", value: activeGroups, hint:"Updated just now", ico:"👥" },
+    { title:"Users Transported", value: usersTransported, hint:"Updated just now", ico:"✅" },
+    { title:"Missing IDs", value: missingIds, hint:"Updated just now", ico:"⚠️" },
+  ];
+
+  const grid = document.getElementById("kpiGrid");
+  grid.innerHTML = kpis.map(k=>`
+    <div class="card">
+      <div class="kpi">
+        <div>
+          <div class="label">${k.title}</div>
+          <div class="value">${k.value}</div>
+          <div class="hint">${k.hint}</div>
+        </div>
+        <div class="badge-ico" aria-hidden="true">${k.ico}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderPipeline(){
+  const hasPickups = state.pickups.length > 0;
+  const geocoded = state.pickups.some(p=>p.coords);
+  const hasGroups = state.groups.length > 0;
+  const hasRoutes = state.routes.length > 0;
+  const hasSends  = state.telegram.sends.length > 0;
+
+  const steps = [
+    { key:"import", title:"Import", sub:"CSV & Validation", done: hasPickups },
+    { key:"pickups", title:"Pickups", sub:"Geocoding", done: geocoded || hasPickups },
+    { key:"groups", title:"Groups", sub:"Auto-grouping", done: hasGroups },
+    { key:"routes", title:"Routes", sub:"Optimization", done: hasRoutes },
+    { key:"notify", title:"Notify", sub:"Send messages", done: hasSends },
+  ];
+
+  // active = first not done
+  let activeIndex = steps.findIndex(s=>!s.done);
+  if(activeIndex === -1) activeIndex = steps.length-1;
+
+  const box = document.getElementById("pipelineStepper");
+  box.innerHTML = steps.map((s,i)=>{
+    const cls = s.done ? "step done" : (i===activeIndex ? "step active" : "step");
+    const ring = s.done ? "✓" : (i+1);
+    return `
+      <div class="${cls}">
+        <div class="ring">${ring}</div>
+        <div class="t">
+          <b>${s.title}</b>
+          <span>${s.sub}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderRecentActivity(){
+  const box = document.getElementById("recentActivity");
+  const items = state.logs.slice(0,6);
+  if(items.length===0){
+    box.innerHTML = `<div class="muted">No logs yet.</div>`;
+    return;
+  }
+  box.innerHTML = items.map(l=>`
+    <div style="display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed #edf2f7;">
+      <div>
+        <div style="font-weight:900;">${escapeHtml(l.step)} <span class="badge ${badgeClass(l.level)}" style="margin-left:8px;">${l.level}</span></div>
+        <div class="muted">${escapeHtml(l.message)}</div>
+      </div>
+      <div class="muted" style="white-space:nowrap;">${l.ts}</div>
+    </div>
+  `).join("");
+}
+
+function badgeClass(level){
+  if(level==="SUCCESS") return "good";
+  if(level==="ERROR") return "bad";
+  return "warn";
+}
+
+function renderPickups(){
+  document.getElementById("pickupCount").textContent = state.pickups.length;
+
+  const q = (document.getElementById("pickupSearch").value || "").trim().toLowerCase();
+  const rows = state.pickups.filter(p=>{
+    if(!q) return true;
+    return (p.name||"").toLowerCase().includes(q)
+      || (p.zone||"").toLowerCase().includes(q)
+      || (p.address||"").toLowerCase().includes(q);
+  });
+
+  const tbody = document.getElementById("pickupTbody");
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center; padding:20px;">No pickups found. Import data first.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(p=>{
+    const statusBadge = p.coords ? `<span class="badge good">GEOCODED</span>` : `<span class="badge warn">NOT_GEOCODED</span>`;
+    return `
+      <tr>
+        <td>${statusBadge}</td>
+        <td><b>${escapeHtml(p.name)}</b><div class="small">ID: <span class="mono">${p.id.slice(0,8)}</span></div></td>
+        <td>${escapeHtml(p.zone || "—")}</td>
+        <td>${escapeHtml(p.address || "—")}</td>
+        <td class="mono">${prettyCoords(p.coords)}</td>
+        <td>
+          <div class="row-actions">
+            <button class="mini" onclick="openPickupModal('${p.id}')">Edit</button>
+            <button class="mini danger" onclick="deletePickup('${p.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderGroupSettings(){
+  const gs = state.groupSettings;
+
+  document.getElementById("constraintsBox").innerHTML = `
+    ${slider("Max Radius (km)", "maxRadiusKm", gs.maxRadiusKm, 1, 20, "km")}
+    ${slider("Max Riders per Vehicle", "maxRiders", gs.maxRiders, 1, 10, "pax")}
+    ${slider("Max Route Duration (min)", "maxRouteDurationMin", gs.maxRouteDurationMin, 15, 180, "min")}
+  `;
+
+  document.getElementById("fleetBox").innerHTML = `
+    ${slider("Buffer Before Shift (min)", "bufferBeforeShiftMin", gs.bufferBeforeShiftMin, 0, 120, "min")}
+    <div class="field">
+      <label>Total Vehicles Available</label>
+      <input type="number" min="1" id="gs_totalVehicles" value="${gs.totalVehicles}">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Depot Location (Lat)</label>
+        <input type="number" step="0.0001" id="gs_depotLat" value="${gs.depotLat}">
+      </div>
+      <div class="field">
+        <label>Depot Location (Lng)</label>
+        <input type="number" step="0.0001" id="gs_depotLng" value="${gs.depotLng}">
+      </div>
+    </div>
+    <div class="hint">These parameters affect grouping & routes in a real system (demo uses simple logic).</div>
+  `;
+}
+
+function slider(label, key, val, min, max, unit){
+  const id = `gs_${key}`;
+  return `
+    <div class="field">
+      <div class="split">
+        <label>${label}</label>
+        <div class="muted"><b id="${id}_v">${val}</b> ${unit}</div>
+      </div>
+      <input type="range" min="${min}" max="${max}" value="${val}" id="${id}">
+    </div>
+  `;
+}
+
+function renderGroups(){
+  const area = document.getElementById("groupsArea");
+  if(state.groups.length===0){
+    area.innerHTML = `
+      <div class="empty">
+        <div class="emoji">👥</div>
+        <b>No groups generated yet</b>
+        <p>Run the grouping algorithm to create optimized clusters.</p>
+        <button class="btn primary" onclick="generateGroups()">Generate Now</button>
+      </div>
+    `;
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="grid cols-2">
+      ${state.groups.map(g=>`
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Group ${g.name}</h3>
+              <p>${g.members.length} riders • Zone: ${escapeHtml(g.zone || "Mixed")}</p>
+            </div>
+            <span class="badge good">READY</span>
+          </div>
+          <div class="card-body">
+            <div class="small muted">Stops:</div>
+            <ol style="margin:8px 0 0; padding-left:18px;">
+              ${g.members.map(m=>`<li>${escapeHtml(m.name)} <span class="muted">— ${escapeHtml(m.address||"")}</span></li>`).join("")}
+            </ol>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderRoutes(){
+  document.getElementById("routeCount").textContent = state.routes.length;
+  const box = document.getElementById("routesList");
+  if(state.routes.length===0){
+    box.innerHTML = `
+      <div class="empty" style="padding:28px 16px;">
+        <div class="emoji">🧭</div>
+        <b>No routes yet</b>
+        <p>Generate groups first, then optimize routes.</p>
+        <button class="btn primary" onclick="optimizeRoutes()">Generate Routes</button>
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = state.routes.map(r=>`
+    <div style="border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:10px; background:#fff;">
+      <div class="split">
+        <div>
+          <b>Route ${escapeHtml(r.id)}</b>
+          <div class="small muted">Driver: ${escapeHtml(r.driver)} • ${r.stops.length} stops</div>
+        </div>
+        <div class="right">
+          <button class="mini" onclick="selectRoute('${r.id}')">View</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderRoutePreview(route){
+  const title = document.getElementById("mapTitle");
+  const sub = document.getElementById("mapSubtitle");
+  const stopsBox = document.getElementById("mapStops");
+
+  if(!route){
+    title.textContent = "Select a route";
+    sub.textContent = "Map integration requires API key (demo placeholder).";
+    stopsBox.innerHTML = "";
+    return;
+  }
+
+  title.textContent = `Route ${route.id}`;
+  sub.textContent = `Driver: ${route.driver} • Estimated duration: ${route.etaMin} min`;
+
+  stopsBox.innerHTML = `
+    <div class="card" style="box-shadow:none;">
+      <div class="card-head">
+        <div>
+          <h3>Stops Order (Demo)</h3>
+          <p>In real app: optimized using Google Maps / OR-Tools</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <ol style="margin:0; padding-left:18px;">
+          ${route.stops.map(s=>`<li><b>${escapeHtml(s.name)}</b> — <span class="muted">${escapeHtml(s.address||"")}</span></li>`).join("")}
+        </ol>
+      </div>
+    </div>
+  `;
+}
+
+function renderTelegram(){
+  // template + preview
+  const tpl = document.getElementById("telegramTemplate");
+  tpl.value = state.telegram.template;
+
+  const demoUser = state.pickups[0] || {name:"Ahmed", address:"Pickup"};
+  const time = shiftTime(state.ui.shift);
+  const previewText = applyTemplate(state.telegram.template, {
+    name: demoUser.name || "Ahmed",
+    time,
+    driver: "Driver 1",
+    link: "https://maps.google.com/?q=" + encodeURIComponent(demoUser.address || "CMH")
+  });
+  document.getElementById("telegramPreview").textContent = previewText;
+
+  // stats
+  const total = getRecipients().length;
+  const success = state.telegram.sends.filter(s=>s.status==="SUCCESS").length;
+  const failed  = state.telegram.sends.filter(s=>s.status==="FAILED").length;
+  const rate = total ? Math.round((success/total)*100) : 0;
+
+  document.getElementById("deliveryStats").innerHTML = `
+    <div class="grid cols-2">
+      <div class="card" style="box-shadow:none;">
+        <div class="card-body" style="text-align:center;">
+          <div style="font-size:28px;">✅</div>
+          <div style="font-size:32px;font-weight:1000;">${rate}%</div>
+          <div class="muted">Success Rate</div>
+        </div>
+      </div>
+      <div class="card" style="box-shadow:none;">
+        <div class="card-body" style="text-align:center;">
+          <div style="font-size:28px;">❌</div>
+          <div style="font-size:32px;font-weight:1000;color:var(--bad);">${failed}</div>
+          <div class="muted">Failed (Invalid ID)</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  renderRecipients();
+}
+
+function renderRecipients(){
+  const tbody = document.getElementById("recipientTbody");
+  const rec = getRecipients();
+  if(rec.length===0){
+    tbody.innerHTML = `<tr><td colspan="5" class="muted" style="text-align:center; padding:18px;">No recipients generated yet. Add telegram IDs or import data.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rec.map(r=>{
+    const send = state.telegram.sends.find(s=>s.pickupId===r.pickupId);
+    const status = send ? send.status : "PENDING";
+    const badge = status==="SUCCESS" ? "good" : status==="FAILED" ? "bad" : "warn";
+
+    return `
+      <tr>
+        <td><b>${escapeHtml(r.name)}</b><div class="small muted">${escapeHtml(r.zone||"")}</div></td>
+        <td class="mono">${escapeHtml(r.telegramId || "—")}</td>
+        <td>${escapeHtml(r.groupName || "—")}</td>
+        <td><span class="badge ${badge}">${status}</span></td>
+        <td>
+          <button class="mini" onclick="sendOne('${r.pickupId}')">Send</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderLogs(){
+  const tbody = document.getElementById("logsTbody");
+  const logs = state.logs;
+  if(logs.length===0){
+    tbody.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center; padding:18px;">No logs yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = logs.slice(0,40).map(l=>`
+    <tr>
+      <td class="mono">${escapeHtml(l.ts)}</td>
+      <td><span class="badge ${badgeClass(l.level)}">${escapeHtml(l.level)}</span></td>
+      <td><b>${escapeHtml(l.step)}</b></td>
+      <td>${escapeHtml(l.message)}</td>
+    </tr>
+  `).join("");
+}
+
+function renderSettings(){
+  document.getElementById("portalSheetId").value = state.settings.portalSheetId || "";
+  document.getElementById("trajSheetId").value = state.settings.trajSheetId || "";
+  document.getElementById("telegramToken").value = state.settings.telegramToken || "";
+  document.getElementById("mapsKey").value = state.settings.mapsKey || "";
+}
+
+/* ---------- Actions ---------- */
+function escapeHtml(s){
+  return (s??"").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function shiftTime(shift){
+  if(shift==="A") return "08:15";
+  if(shift==="B") return "10:15";
+  return "15:15";
+}
+
+function applyTemplate(tpl, vars){
+  return tpl
+    .replaceAll("{{name}}", vars.name ?? "")
+    .replaceAll("{{time}}", vars.time ?? "")
+    .replaceAll("{{driver}}", vars.driver ?? "")
+    .replaceAll("{{link}}", vars.link ?? "");
+}
+
+function geocodeAll(){
+  let count = 0;
+  state.pickups = state.pickups.map(p=>{
+    if(p.coords) return p;
+    count++;
+    // mock coords around Casablanca-ish
+    const lat = 33.55 + Math.random()*0.10;
+    const lng = -7.75 + Math.random()*0.25;
+    return {...p, coords:{lat,lng}, status:"GEOCODED"};
+  });
+  addLog("SUCCESS","Pickups", `Geocoded ${count} pickup(s).`);
+  toast("Geocode Done", `Geocoded ${count} pickup(s).`);
+}
+
+function generateGroups(){
+  if(state.pickups.length===0){
+    toast("No pickups", "Import or add pickups first.");
+    return;
+  }
+
+  const maxRiders = Number(state.groupSettings.maxRiders || 4);
+
+  // Simple grouping:
+  // - if coords exist: bucket by rounded lat/lng
+  // - else: bucket by zone text
+  const buckets = new Map();
+
+  for(const p of state.pickups){
+    let key;
+    if(p.coords){
+      key = `C:${Math.round(p.coords.lat*20)/20},${Math.round(p.coords.lng*20)/20}`;
+    }else{
+      key = `Z:${(p.zone||"Unknown").trim().toLowerCase()}`;
+    }
+    if(!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(p);
+  }
+
+  const groups = [];
+  let gi = 1;
+
+  for(const [key, members] of buckets.entries()){
+    // split by max riders
+    for(let i=0; i<members.length; i+=maxRiders){
+      const chunk = members.slice(i,i+maxRiders);
+      groups.push({
+        id: uid(),
+        name: String(gi++).padStart(2,"0"),
+        zone: chunk[0].zone || "",
+        members: chunk.map(x=>({ pickupId:x.id, name:x.name, address:x.address, zone:x.zone }))
+      });
+    }
+  }
+
+  state.groups = groups;
+  state.routes = []; // reset routes
+  addLog("SUCCESS","Grouping", `Generated ${groups.length} group(s) from ${state.pickups.length} pickup(s).`);
+  toast("Groups Generated", `${groups.length} group(s) created.`);
+  saveState();
+  renderAll();
+}
+
+function optimizeRoutes(){
+  if(state.groups.length===0){
+    toast("No groups", "Generate groups first.");
+    return;
+  }
+  // Demo routes: one per group, stops = group members
+  const routes = state.groups.map((g, idx)=>({
+    id: `${idx+1}`.padStart(3,"0"),
+    driver: `Driver ${idx+1}`,
+    groupId: g.id,
+    etaMin: 20 + g.members.length * 8,
+    stops: g.members.map(m=>({ name:m.name, address:m.address, pickupId:m.pickupId }))
+  }));
+  state.routes = routes;
+  addLog("SUCCESS","Routes", `Generated ${routes.length} route(s).`);
+  toast("Routes Ready", `${routes.length} route(s) generated.`);
+  saveState();
+  renderAll();
+}
+
+function selectRoute(routeId){
+  const r = state.routes.find(x=>x.id===routeId);
+  renderRoutePreview(r);
+}
+
+function exportPdfs(){
+  if(state.routes.length===0){
+    toast("No routes", "Generate routes first.");
+    return;
+  }
+  addLog("SUCCESS","Export", `Exported ${state.routes.length} PDF(s) (demo placeholder).`);
+  toast("Export", "PDF export is a placeholder in this demo.");
+}
+
+function getRecipients(){
+  // Map pickupId -> groupName
+  const groupMap = new Map();
+  for(const g of state.groups){
+    for(const m of g.members){
+      groupMap.set(m.pickupId, g.name);
+    }
+  }
+  return state.pickups
+    .filter(p=>p.telegramId && String(p.telegramId).trim() !== "")
+    .map(p=>({
+      pickupId: p.id,
+      name: p.name,
+      telegramId: String(p.telegramId),
+      zone: p.zone,
+      groupName: groupMap.get(p.id) || ""
+    }));
+}
+
+function sendOne(pickupId){
+  const p = state.pickups.find(x=>x.id===pickupId);
+  if(!p) return;
+
+  const ok = p.telegramId && String(p.telegramId).trim() !== "" && String(p.telegramId).trim() !== "0";
+  const status = ok ? "SUCCESS" : "FAILED";
+
+  // upsert send status
+  const idx = state.telegram.sends.findIndex(s=>s.pickupId===pickupId);
+  const row = { pickupId, status, ts: nowStamp() };
+  if(idx>=0) state.telegram.sends[idx] = row;
+  else state.telegram.sends.push(row);
+
+  addLog(ok ? "SUCCESS":"ERROR", "Telegram", `${status} sending to ${p.name} (${p.telegramId || "no id"}).`);
+  toast("Telegram", `${p.name}: ${status}`);
+  saveState();
+  renderAll();
+}
+
+function sendBroadcast(){
+  const rec = getRecipients();
+  if(rec.length===0){
+    toast("No recipients", "Add telegram IDs first.");
+    return;
+  }
+  let ok=0, fail=0;
+  for(const r of rec){
+    // demo: 90% success
+    const success = Math.random() > 0.10;
+    if(success){ ok++; }
+    else{ fail++; }
+
+    const idx = state.telegram.sends.findIndex(s=>s.pickupId===r.pickupId);
+    const row = { pickupId:r.pickupId, status: success ? "SUCCESS":"FAILED", ts: nowStamp() };
+    if(idx>=0) state.telegram.sends[idx]=row; else state.telegram.sends.push(row);
+  }
+  addLog("SUCCESS","Telegram", `Broadcast complete. Success: ${ok}, Failed: ${fail}.`);
+  toast("Broadcast Sent", `Success ${ok} • Failed ${fail}`);
+  saveState();
+  renderAll();
+}
+
+function runFullPipeline(){
+  // Demo pipeline: geocode -> groups -> routes -> send broadcast
+  geocodeAll();
+  generateGroups();
+  optimizeRoutes();
+  sendBroadcast();
+  addLog("SUCCESS","Pipeline", "Full pipeline executed (demo).");
+}
+
+function deletePickup(id){
+  const before = state.pickups.length;
+  state.pickups = state.pickups.filter(p=>p.id!==id);
+  // clean sends
+  state.telegram.sends = state.telegram.sends.filter(s=>s.pickupId!==id);
+  addLog("SUCCESS","Pickups", `Deleted pickup. (${before} → ${state.pickups.length})`);
+  toast("Deleted", "Pickup removed.");
+  saveState();
+  renderAll();
+}
+
+/* ---------- Modal ---------- */
+let editingPickupId = null;
+function openPickupModal(id=null){
+  editingPickupId = id;
+  const modal = document.getElementById("pickupModal");
+  modal.classList.add("show");
+
+  const t = document.getElementById("pickupModalTitle");
+  if(!id){
+    t.textContent = "Add Pickup";
+    setModalFields({name:"",zone:"",address:"",telegramId:"",coords:null});
+  }else{
+    t.textContent = "Edit Pickup";
+    const p = state.pickups.find(x=>x.id===id);
+    setModalFields(p);
+  }
+}
+function closePickupModal(){
+  document.getElementById("pickupModal").classList.remove("show");
+  editingPickupId = null;
+}
+function setModalFields(p){
+  document.getElementById("m_name").value = p?.name || "";
+  document.getElementById("m_zone").value = p?.zone || "";
+  document.getElementById("m_address").value = p?.address || "";
+  document.getElementById("m_telegram").value = p?.telegramId || "";
+  document.getElementById("m_coords").value = p?.coords ? `${p.coords.lat},${p.coords.lng}` : "";
+}
+function savePickupFromModal(){
+  const name = document.getElementById("m_name").value.trim();
+  const zone = document.getElementById("m_zone").value.trim();
+  const address = document.getElementById("m_address").value.trim();
+  const telegramId = document.getElementById("m_telegram").value.trim();
+  const coordsRaw = document.getElementById("m_coords").value.trim();
+
+  let coords = null;
+  if(coordsRaw){
+    const parts = coordsRaw.split(",").map(x=>x.trim());
+    if(parts.length===2){
+      const lat = Number(parts[0]);
+      const lng = Number(parts[1]);
+      if(!Number.isNaN(lat) && !Number.isNaN(lng)){
+        coords = {lat, lng};
+      }
+    }
+  }
+
+  if(!name || !address){
+    toast("Missing data", "Name and Address are required.");
+    return;
+  }
+
+  if(!editingPickupId){
+    state.pickups.unshift({
+      id: uid(),
+      status: coords ? "GEOCODED":"NOT_GEOCODED",
+      name, zone, address, coords, telegramId
+    });
+    addLog("SUCCESS","Pickups", `Added pickup for ${name}.`);
+  }else{
+    state.pickups = state.pickups.map(p=>{
+      if(p.id!==editingPickupId) return p;
+      return {
+        ...p,
+        name, zone, address, telegramId,
+        coords,
+        status: coords ? "GEOCODED":"NOT_GEOCODED",
+      };
+    });
+    addLog("SUCCESS","Pickups", `Updated pickup for ${name}.`);
+  }
+
+  // reset derived data
+  state.groups = [];
+  state.routes = [];
+  saveState();
+  renderAll();
+  closePickupModal();
+  toast("Saved", "Pickup saved.");
+}
+
+/* ---------- Import CSV ---------- */
+function downloadSample(){
+  const csv =
+`User,pickup,Date,start_at,end_at,id_telegram,Zone
+[CMH10] Imane AMRO,"Mghougha tri9 (boutaour en face Boutique na3no3i)",2025-12-17,09:00,17:00,,
+[CMH10] Rabie EL AZIZI,"Route de Tetouan, Tanger, Maroc",2025-12-17,09:00,17:00,123456789,Gzenaya
+[CMH12] Khalid AQAJJIA,"rond point nour résidence nour",2025-12-17,09:00,17:00,,Nour
+`;
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "portal_shift_sample.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function parseCSV(text){
+  // Simple CSV parser (handles quoted commas)
+  const rows = [];
+  let cur = "", inQuotes=false;
+  const lines = [];
+  for(let i=0;i<text.length;i++){
+    const ch = text[i];
+    if(ch === '"'){
+      if(inQuotes && text[i+1] === '"'){ cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    }else if(ch === "\n" && !inQuotes){
+      lines.push(cur);
+      cur = "";
+    }else{
+      cur += ch;
+    }
+  }
+  if(cur.trim()!=="") lines.push(cur);
+
+  const splitLine = (line)=>{
+    const out = [];
+    let v="", q=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch === '"'){
+        if(q && line[i+1]==='"'){ v+='"'; i++; }
+        else q=!q;
+      }else if(ch === "," && !q){
+        out.push(v); v="";
+      }else{
+        v+=ch;
+      }
+    }
+    out.push(v);
+    return out.map(x=>x.trim());
+  };
+
+  for(const line of lines){
+    if(!line.trim()) continue;
+    rows.push(splitLine(line));
+  }
+  return rows;
+}
+
+function normalizeHeader(h){
+  return (h||"").toString().trim().toLowerCase().replace(/\s+/g,"_");
+}
+
+function importCSV(fileText){
+  const report = document.getElementById("importReport");
+  try{
+    const rows = parseCSV(fileText);
+    if(rows.length<2) throw new Error("CSV must have header + at least 1 row.");
+
+    const header = rows[0].map(normalizeHeader);
+
+    const find = (...keys)=>{
+      for(const k of keys){
+        const idx = header.indexOf(k);
+        if(idx>=0) return idx;
+      }
+      return -1;
+    };
+
+    const idxUser = find("user","name","employee");
+    const idxPickup = find("pickup","address","location");
+    const idxZone = find("zone","area");
+    const idxTg = find("id_telegram","telegram_id","telegram","chat_id");
+
+    if(idxUser<0 || idxPickup<0){
+      throw new Error("Missing required headers: User and pickup.");
+    }
+
+    let created=0;
+    let errors=0;
+
+    for(let i=1; i<rows.length; i++){
+      const r = rows[i];
+      const name = (r[idxUser]||"").trim();
+      const address = (r[idxPickup]||"").trim();
+      const zone = idxZone>=0 ? (r[idxZone]||"").trim() : "";
+      const tg = idxTg>=0 ? (r[idxTg]||"").trim() : "";
+
+      if(!name || !address){ errors++; continue; }
+
+      state.pickups.push({
+        id: uid(),
+        status: "NOT_GEOCODED",
+        name,
+        zone,
+        address,
+        coords: null,
+        telegramId: tg
+      });
+      created++;
+    }
+
+    addLog("SUCCESS","Import", `Imported CSV. Created ${created} pickups. Errors: ${errors}.`);
+    toast("Import Complete", `Created ${created} pickups.`);
+
+    saveState();
+    renderAll();
+
+    report.innerHTML = `
+      <div class="badge good">SUCCESS</div>
+      <div style="margin-top:10px;">
+        <b>Created:</b> ${created} <br/>
+        <b>Skipped (invalid):</b> ${errors} <br/>
+        <div class="hint">Go to Pickups → Geocode All → Generate Groups → Routes → Telegram.</div>
+      </div>
+    `;
+  }catch(e){
+    addLog("ERROR","Import", e.message || "Import failed.");
+    report.innerHTML = `<div class="badge bad">ERROR</div><div style="margin-top:10px;">${escapeHtml(e.message || "Import failed.")}</div>`;
+    toast("Import Error", e.message || "Import failed.");
+  }
+}
+
+/* ---------- Settings Save ---------- */
+function saveSettings(){
+  state.settings.portalSheetId = document.getElementById("portalSheetId").value.trim();
+  state.settings.trajSheetId   = document.getElementById("trajSheetId").value.trim();
+  state.settings.telegramToken = document.getElementById("telegramToken").value.trim();
+  state.settings.mapsKey       = document.getElementById("mapsKey").value.trim();
+  addLog("SUCCESS","Settings","System settings saved (local).");
+  toast("Saved", "Settings saved locally.");
+  saveState();
+}
+
+/* ---------- Group settings save ---------- */
+function bindGroupSettingsInputs(){
+  // Sliders (created dynamically)
+  const keys = ["maxRadiusKm","maxRiders","maxRouteDurationMin","bufferBeforeShiftMin"];
+  for(const k of keys){
+    const el = document.getElementById("gs_"+k);
+    const out = document.getElementById("gs_"+k+"_v");
+    if(el){
+      el.addEventListener("input", ()=>{
+        out.textContent = el.value;
+      });
+    }
+  }
+}
+function saveGroupSettings(){
+  const gs = state.groupSettings;
+  const readNum = (id, fallback)=> {
+    const el = document.getElementById(id);
+    if(!el) return fallback;
+    const v = Number(el.value);
+    return Number.isNaN(v) ? fallback : v;
+  };
+
+  gs.maxRadiusKm = readNum("gs_maxRadiusKm", gs.maxRadiusKm);
+  gs.maxRiders = readNum("gs_maxRiders", gs.maxRiders);
+  gs.maxRouteDurationMin = readNum("gs_maxRouteDurationMin", gs.maxRouteDurationMin);
+  gs.bufferBeforeShiftMin = readNum("gs_bufferBeforeShiftMin", gs.bufferBeforeShiftMin);
+  gs.totalVehicles = readNum("gs_totalVehicles", gs.totalVehicles);
+  gs.depotLat = readNum("gs_depotLat", gs.depotLat);
+  gs.depotLng = readNum("gs_depotLng", gs.depotLng);
+
+  state.groupSettings = gs;
+  addLog("SUCCESS","Group Settings","Saved grouping configuration.");
+  toast("Saved", "Configuration saved.");
+  saveState();
+  renderAll();
+}
+function resetGroupSettings(){
+  state.groupSettings = DEFAULT_STATE().groupSettings;
+  addLog("SUCCESS","Group Settings","Reset configuration to defaults.");
+  toast("Reset", "Default values restored.");
+  saveState();
+  renderAll();
+}
+
+/* ---------- Reset All ---------- */
+function resetAll(){
+  if(!confirm("Reset all local data? (Demo only)")) return;
+  state = DEFAULT_STATE();
+  saveState();
+  renderAll();
+  toast("Reset", "Demo data restored.");
+}
+
+/* ---------- Main render ---------- */
+function renderAll(){
+  // top inputs
+  document.getElementById("dateInput").value = state.ui.date;
+  document.getElementById("shiftSelect").value = state.ui.shift;
+  document.getElementById("tzLabel").textContent = state.ui.timezone;
+
+  renderNav();
+  renderPages();
+  renderCrumb();
+
+  // pages
+  renderKpis();
+  renderPipeline();
+  renderRecentActivity();
+  renderPickups();
+  renderGroupSettings();
+  bindGroupSettingsInputs();
+  renderGroups();
+  renderRoutes();
+  renderRoutePreview(null);
+  renderTelegram();
+  renderLogs();
+  renderSettings();
+}
+
+/* ---------- Events ---------- */
+document.getElementById("nav").addEventListener("click", (e)=>{
+  const a = e.target.closest("a[data-page]");
+  if(!a) return;
+  gotoPage(a.dataset.page);
+});
+
+document.getElementById("dateInput").addEventListener("change", e=> setDate(e.target.value));
+document.getElementById("shiftSelect").addEventListener("change", e=> setShift(e.target.value));
+
+document.getElementById("resetAllBtn").addEventListener("click", resetAll);
+document.getElementById("bellBtn").addEventListener("click", ()=> toast("Notifications", "Demo: no real notifications wired."));
+
+document.getElementById("pickupSearch").addEventListener("input", renderPickups);
+
+document.getElementById("addPickupBtn").addEventListener("click", ()=> openPickupModal(null));
+document.getElementById("geocodeAllBtn").addEventListener("click", geocodeAll);
+
+document.getElementById("pickupModalClose").addEventListener("click", closePickupModal);
+document.getElementById("pickupModalCancel").addEventListener("click", closePickupModal);
+document.getElementById("pickupModalSave").addEventListener("click", savePickupFromModal);
+document.getElementById("pickupModal").addEventListener("click", (e)=>{
+  if(e.target.id==="pickupModal") closePickupModal();
+});
+
+document.getElementById("saveGroupSettingsBtn").addEventListener("click", saveGroupSettings);
+document.getElementById("resetGroupSettingsBtn").addEventListener("click", resetGroupSettings);
+
+document.getElementById("regenerateGroupsBtn").addEventListener("click", generateGroups);
+
+document.getElementById("reOptimizeBtn").addEventListener("click", optimizeRoutes);
+document.getElementById("exportPdfBtn").addEventListener("click", exportPdfs);
+
+document.getElementById("telegramTemplate").addEventListener("input", (e)=>{
+  state.telegram.template = e.target.value;
+  saveState();
+  renderTelegram();
+});
+
+document.getElementById("sendBroadcastBtn").addEventListener("click", sendBroadcast);
+document.getElementById("refreshRecipientsBtn").addEventListener("click", ()=> { renderRecipients(); toast("Refreshed","Recipient queue updated."); });
+
+document.getElementById("saveSettingsBtn").addEventListener("click", saveSettings);
+
+document.getElementById("addFakeLogBtn").addEventListener("click", ()=> addLog("SUCCESS","System","Generated a demo log entry."));
+document.getElementById("clearAllLogsBtn").addEventListener("click", ()=>{
+  if(!confirm("Clear all logs?")) return;
+  state.logs = [];
+  saveState();
+  renderAll();
+  toast("Cleared","Logs cleared.");
+});
+
+document.getElementById("clearLogsBtn").addEventListener("click", ()=>{
+  if(!confirm("Clear recent logs?")) return;
+  state.logs = [];
+  saveState();
+  renderAll();
+  toast("Cleared","Logs cleared.");
+});
+
+document.getElementById("runPipelineBtn").addEventListener("click", runFullPipeline);
+
+document.querySelectorAll("[data-jump]").forEach(btn=>{
+  btn.addEventListener("click", ()=> gotoPage(btn.dataset.jump));
+});
+
+document.getElementById("downloadSampleBtn").addEventListener("click", downloadSample);
+
+/* Import dropzone */
+const dz = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+document.getElementById("selectFileBtn").addEventListener("click", ()=> fileInput.click());
+dz.addEventListener("click", ()=> fileInput.click());
+["dragenter","dragover"].forEach(ev=>{
+  dz.addEventListener(ev, (e)=>{ e.preventDefault(); dz.classList.add("drag"); });
+});
+["dragleave","drop"].forEach(ev=>{
+  dz.addEventListener(ev, (e)=>{ e.preventDefault(); dz.classList.remove("drag"); });
+});
+dz.addEventListener("drop", (e)=>{
+  const file = e.dataTransfer.files?.[0];
+  if(file) readFile(file);
+});
+fileInput.addEventListener("change", ()=>{
+  const file = fileInput.files?.[0];
+  if(file) readFile(file);
+});
+
+function readFile(file){
+  const reader = new FileReader();
+  reader.onload = () => importCSV(reader.result);
+  reader.readAsText(file);
+}
+
+/* Expose some funcs to inline onclick */
+window.openPickupModal = openPickupModal;
+window.deletePickup = deletePickup;
+window.generateGroups = generateGroups;
+window.optimizeRoutes = optimizeRoutes;
+window.selectRoute = selectRoute;
+window.sendOne = sendOne;
+
+/* Boot */
+renderAll();
+</script>
+</body>
+</html>
